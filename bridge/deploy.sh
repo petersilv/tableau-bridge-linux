@@ -16,6 +16,6 @@ wget https://raw.githubusercontent.com/petersilv/tableau-bridge-linux/main/bridg
 docker image build -t bridge ./
 
 docker run -d \
-    --name bridge
+    --name bridge \
     --env-file ./variables \
     bridge
