@@ -9,6 +9,7 @@ RUN ACCEPT_EULA=y yum install -y bridge.rpm && rm *.rpm
 # Install Postgres Driver
 COPY postgresql-42.6.0.jar /opt/tableau/tableau_driver/jdbc/
 
+# Start bridge client on container launch
 CMD /opt/tableau/tableau_bridge/bin/TabBridgeClientWorker \
     -e \
     --site="$SITE" \
