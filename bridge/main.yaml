@@ -4,49 +4,53 @@
   become: true
 
   pre_tasks:
-    - name: Update & Upgrade APT 
-      apt:
-        update_cache: yes
-        upgrade: 'yes'
+    - name: Update & Upgrade APT
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: "yes"
 
   roles:
     - geerlingguy.docker
 
   tasks:
     - name: Create bridge directory
-      file:
-        path: "/bridge"
+      ansible.builtin.file:
+        path: /bridge
         state: directory
+        mode: "0600"
 
     - name: Download Tableau Bridge installer
-      get_url:
-        url: "https://downloads.tableau.com/tssoftware/TableauBridge-20233.23.1017.0948.x86_64.rpm"
-        dest: "/bridge/bridge.rpm"
+      ansible.builtin.get_url:
+        url: https://downloads.tableau.com/tssoftware/TableauBridge-20233.23.1017.0948.x86_64.rpm
+        dest: /bridge/bridge.rpm
+        mode: "0600"
 
     - name: Download Postgres JDBC Driver
-      get_url:
-        url: "https://jdbc.postgresql.org/download/postgresql-42.6.0.jar"
-        dest: "/bridge/postgresql-42.6.0.jar"
+      ansible.builtin.get_url:
+        url: https://jdbc.postgresql.org/download/postgresql-42.6.0.jar
+        dest: /bridge/postgresql-42.6.0.jar
+        mode: "0600"
 
     - name: Copy files
-      copy:
-        src: '{{item}}'
-        dest: '/bridge'
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: /bridge
+        mode: "0600"
       loop:
         - ./Dockerfile
         - ./token
         - ./variables
 
     - name: Build Docker image for Bridge
-      docker_image:
-        name: "bridge_image"
+      community.docker.docker_image:
+        name: bridge_image
         source: build
         build:
-          path: "/bridge"
+          path: /bridge
 
     - name: Run Bridge Container
-      docker_container:
-        name: "bridge"
-        image: "bridge_image"
-        env_file: "/bridge/variables"
+      community.docker.docker_container:
+        name: bridge
+        image: bridge_image
+        env_file: /bridge/variables
         detach: true
