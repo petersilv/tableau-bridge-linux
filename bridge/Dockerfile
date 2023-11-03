@@ -17,4 +17,4 @@ CMD /opt/tableau/tableau_bridge/bin/TabBridgeClientWorker \
     --userEmail="$USEREMAIL" \
     --patTokenId="$PATTOKENID" \
     --patTokenFile="./token" \
-    >> /run_bridge.log 2>&1
+    >> /root/Documents/My_Tableau_Bridge_Repository/Logs/bridge_start.log 2>&1

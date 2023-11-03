@@ -58,6 +58,8 @@
         name: "{{ client }}"
         image: bridge_image
         detach: true
+        volumes:
+          - /bridge/logs:/root/Documents/My_Tableau_Bridge_Repository/Logs
         env:
           SITE: "{{ site }}"
           CLIENT: "{{ client }}"
