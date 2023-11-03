@@ -3,6 +3,9 @@
   hosts: all
   become: true
 
+  vars_files:
+    - vars.yaml
+
   pre_tasks:
     - name: Update & Upgrade APT
       ansible.builtin.apt:
@@ -21,25 +24,27 @@
 
     - name: Download Tableau Bridge installer
       ansible.builtin.get_url:
-        url: https://downloads.tableau.com/tssoftware/TableauBridge-20233.23.1017.0948.x86_64.rpm
+        url: "{{ bridge_installer }}"
         dest: /bridge/bridge.rpm
         mode: "0600"
 
     - name: Download Postgres JDBC Driver
       ansible.builtin.get_url:
-        url: https://jdbc.postgresql.org/download/postgresql-42.6.0.jar
-        dest: /bridge/postgresql-42.6.0.jar
+        url: "{{ postgres_driver }}"
+        dest: /bridge/postgresql.jar
         mode: "0600"
 
-    - name: Copy files
+    - name: Copy Dockerfile
       ansible.builtin.copy:
-        src: "{{ item }}"
+        src: ./Dockerfile
         dest: /bridge
         mode: "0600"
-      loop:
-        - ./Dockerfile
-        - ./token
-        - ./variables
+
+    - name: Create token file
+      ansible.builtin.copy:
+        content: "{\"{{ token_id }}\" : \"{{ token_secret }}\"}"
+        dest: /bridge/token
+        mode: "0600"
 
     - name: Build Docker image for Bridge
       community.docker.docker_image:
@@ -50,7 +55,11 @@
 
     - name: Run Bridge Container
       community.docker.docker_container:
-        name: bridge
+        name: "{{ client }}"
         image: bridge_image
-        env_file: /bridge/variables
         detach: true
+        env:
+          SITE: "{{ site }}"
+          CLIENT: "{{ client }}"
+          USEREMAIL: "{{ user_email }}"
+          PATTOKENID: "{{ token_id }}"
