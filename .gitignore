@@ -1,1 +1,7 @@
 private/
+.vscode/*
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.pkrvars.hcl
