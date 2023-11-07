@@ -1,0 +1,67 @@
+---
+- name: Tableau Bridge Linux
+  hosts: all
+  become: true
+
+  vars_files:
+    - vars.yaml
+
+  pre_tasks:
+    - name: Update & Upgrade APT
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: "yes"
+
+  roles:
+    - geerlingguy.docker
+
+  tasks:
+    - name: Create bridge directory
+      ansible.builtin.file:
+        path: /bridge
+        state: directory
+        mode: "0600"
+
+    - name: Download Tableau Bridge installer
+      ansible.builtin.get_url:
+        url: "{{ bridge_installer }}"
+        dest: /bridge/bridge.rpm
+        mode: "0600"
+
+    - name: Download Postgres JDBC Driver
+      ansible.builtin.get_url:
+        url: "{{ postgres_driver }}"
+        dest: /bridge/postgresql.jar
+        mode: "0600"
+
+    - name: Copy Dockerfile
+      ansible.builtin.copy:
+        src: ./Dockerfile
+        dest: /bridge
+        mode: "0600"
+
+    - name: Create token file
+      ansible.builtin.copy:
+        content: "{\"{{ token_id }}\" : \"{{ token_secret }}\"}"
+        dest: /bridge/token
+        mode: "0600"
+
+    - name: Build Docker image for Bridge
+      community.docker.docker_image:
+        name: bridge_image
+        source: build
+        build:
+          path: /bridge
+
+    - name: Run Bridge Container
+      community.docker.docker_container:
+        name: "{{ client }}"
+        image: bridge_image
+        detach: true
+        volumes:
+          - /bridge/logs:/root/Documents/My_Tableau_Bridge_Repository/Logs
+        env:
+          SITE: "{{ site }}"
+          CLIENT: "{{ client }}"
+          USEREMAIL: "{{ user_email }}"
+          PATTOKENID: "{{ token_id }}"

@@ -1,0 +1,6 @@
+all:
+  hosts:
+    bridge_instance:
+      ansible_host: INSTANCE_IP_ADDRESS
+      ansible_user: INSTANCE_USER
+      ansible_ssh_private_key_file: PATH_TO_KEY_PAIR
