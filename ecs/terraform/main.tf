@@ -18,6 +18,19 @@ data "aws_iam_policy_document" "task_execution_assume" {
   }
 }
 
+resource "aws_security_group" "main" {
+  name   = "${var.application_name}-ecs"
+  vpc_id = var.vpc_id
+  tags   = local.common_tags
+  
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_cloudwatch_log_group" "main" {
   name = "${var.application_name}-ecs"
   tags = local.common_tags
@@ -70,6 +83,8 @@ resource "aws_ecs_service" "main" {
 
   network_configuration {
     subnets = [var.subnet_id]
+    security_groups = [aws_security_group.main.id]
+    assign_public_ip = true
   }
 
   desired_count = 1

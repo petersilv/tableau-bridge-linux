@@ -30,6 +30,11 @@ variable "created_by" {
   description = "The name of the user that created the resources, to be used in resource tagging"
 }
 
+variable "vpc_id" {
+  type        = string
+  description = "The VPC associated with the service"
+}
+
 variable "subnet_id" {
   type        = string
   description = "The subnet associated with the service"
