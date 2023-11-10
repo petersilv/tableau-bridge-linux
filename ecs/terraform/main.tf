@@ -1,14 +1,4 @@
-resource "aws_iam_role" "task_execution" {
-  name = "${var.application_name}-task-execution"
-  tags = local.common_tags
-
-  assume_role_policy  = data.aws_iam_policy_document.task_execution_assume.json
-  managed_policy_arns = [
-    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-  ]
-}
-
-data "aws_iam_policy_document" "task_execution_assume" {
+data "aws_iam_policy_document" "assume" {
   statement {
     actions = ["sts:AssumeRole"]
     principals {
@@ -16,6 +6,41 @@ data "aws_iam_policy_document" "task_execution_assume" {
       identifiers = ["ecs-tasks.amazonaws.com"]
     }
   }
+}
+
+resource "aws_iam_role" "task_execution" {
+  name = "${var.application_name}-task-execution"
+  tags = local.common_tags
+
+  assume_role_policy  = data.aws_iam_policy_document.assume.json
+  managed_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  ]
+}
+
+data "aws_iam_policy_document" "task" {
+  statement {
+    actions   = [
+      "secretsmanager:*"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "task" {
+  name   = "${var.application_name}-task"
+  tags   = local.common_tags
+  policy = data.aws_iam_policy_document.task.json
+}
+
+resource "aws_iam_role" "task" {
+  name = "${var.application_name}-task"
+  tags = local.common_tags
+
+  assume_role_policy  = data.aws_iam_policy_document.assume.json
+  managed_policy_arns = [
+    aws_iam_policy.task.arn
+  ]
 }
 
 resource "aws_security_group" "main" {
@@ -66,6 +91,7 @@ resource "aws_ecs_task_definition" "main" {
   cpu                      = 512
   memory                   = 2048
   execution_role_arn       = aws_iam_role.task_execution.arn
+  task_role_arn            = aws_iam_role.task.arn
   container_definitions    = jsonencode([
     {
       name = var.application_name
