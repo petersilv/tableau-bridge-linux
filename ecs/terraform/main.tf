@@ -31,6 +31,13 @@ resource "aws_security_group" "main" {
   }
 }
 
+resource "aws_secretsmanager_secret" "variables" {
+  name = "${var.application_name}-ecs-variables"
+  tags = local.common_tags
+
+  recovery_window_in_days = 0
+}
+
 resource "aws_cloudwatch_log_group" "main" {
   name = "${var.application_name}-ecs"
   tags = local.common_tags
