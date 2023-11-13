@@ -104,6 +104,23 @@ resource "aws_ecs_task_definition" "main" {
           awslogs-stream-prefix: var.application_name
         }
       }
+      command = [
+        "/bin/sh",
+        "-c",
+        join( " && ", [
+          "/get-variables ${aws_secretsmanager_secret.variables.id}",
+          "source /variables.sh",
+          join( " ", [
+            "/opt/tableau/tableau_bridge/bin/TabBridgeClientWorker",
+            "-e",
+            "--site=$site",
+            "--client=$client",
+            "--userEmail=$user_email",
+            "--patTokenId=$token_id",
+            "--patTokenFile=/token"
+          ]),
+        ])
+      ]
     }
   ])
 }
