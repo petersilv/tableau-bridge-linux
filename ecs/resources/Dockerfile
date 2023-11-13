@@ -1,7 +1,8 @@
 # Centos 7 is the supported base image
 FROM centos:7
 RUN yum -y update && \
-    yum -y install unzip wget jq
+    yum -y install unzip wget epel-release && \
+    yum -y install jq
 
 # Define variables
 ARG AWS_CLI_INSTALLER="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
@@ -23,3 +24,6 @@ RUN wget -O bridge.rpm "$BRIDGE_INSTALLER" && \
 RUN wget -O postgresql.jar "$POSTGRES_DRIVER" && \
     mkdir -p /opt/tableau/tableau_driver/jdbc/ && \
     mv postgresql.jar /opt/tableau/tableau_driver/jdbc/
+
+# Copy the get variables script
+COPY get-variables /
