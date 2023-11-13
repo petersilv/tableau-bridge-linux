@@ -1,0 +1,7 @@
+{
+    "site" : "YOUR_SITE",
+    "client" : "YOUR_CLIENT",
+    "user_email" : "YOUR_USER_EMAIL",
+    "token_id" : "YOUR_TOKEN_ID",
+    "token_secret" : "YOUR_TOKEN_SECRET"
+}
