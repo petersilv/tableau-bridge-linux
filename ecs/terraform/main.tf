@@ -112,8 +112,8 @@ resource "aws_ecs_task_definition" "main" {
         "/bin/sh",
         "-c",
         join( " && ", [
-          "/get-variables ${aws_secretsmanager_secret.variables.id}",
-          "source /variables.sh",
+          "python3 /get-variables.py --secret ${aws_secretsmanager_secret.variables.id}",
+          "source /variables",
           join( " ", [
             "/opt/tableau/tableau_bridge/bin/TabBridgeClientWorker",
             "-e",
