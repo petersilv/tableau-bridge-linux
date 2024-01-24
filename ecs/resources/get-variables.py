@@ -4,45 +4,82 @@ import argparse
 import requests
 import boto3
 
-# Parse command line arguments
-parser = argparse.ArgumentParser(description='Get the Tableau Bridge variables from secrets manager')
-parser.add_argument('-s', '--secret', required=True, help='Specify the ID or name for the secret that you want to retrieve')
-args = parser.parse_args()
+SESSION = boto3.session.Session()
+CLIENT = SESSION.client(service_name='secretsmanager')
 
-# Set up the Secrets Manager client
-session = boto3.session.Session()
-client = session.client(service_name='secretsmanager')
 
-# Get the id for the current running task
-endpoint = os.environ.get('ECS_CONTAINER_METADATA_URI_V4')
-response = requests.get(f"{endpoint}/task")
-task_id = response.json().get('TaskARN').split('/')[-1]
+def main():
+    args = parse_args()
+    secret_name = args.secret
+    task_id = get_task_id()
+    
+    # Get all variables from Secrets Manager and take available ones for this task
+    all_variables = get_secret(secret_name)
+    task_variables = get_available_token(all_variables)
 
-# Get all variables from secrets manager
-get_secret_value_response = client.get_secret_value(
-    SecretId=args.secret
-)
+    # Update the task_id for the assigned variables and write back to Secrets Manager
+    updated_variables = update_variables(all_variables, task_variables, task_id)
+    put_secret(secret_name, updated_variables)
+    
 
-v_all = json.loads(get_secret_value_response['SecretString'])
+def parse_args():
+    parser = argparse.ArgumentParser(description='Get the Tableau Bridge variables from secrets manager')
+    parser.add_argument('-s', '--secret', required=True, help='Specify the ID or name for the secret that you want to retrieve')
+    args = parser.parse_args()
+    return args
 
-# Filter to only the variables that aren't being used by other clients
-v = [x for x in v_all if not x['task_id']][0]
 
-# Write out the environment variables & token file
-with open('/variables', 'w') as file:
-    for key, value in v.items():
-        file.write(f'{key}={value}\n')
+def get_secret(secret_name):
+    try:
+        response = CLIENT.get_secret_value(
+            SecretId=secret_name
+        )
+    except CLIENT.exceptions.ResourceNotFoundException:
+        raise Exception("Secrets Manager can't find the specified secret.")
 
-with open('/token', 'w') as file:
-    file.write(json.dumps({v['token_id']: v['token_secret']}))
+    variables = json.loads(response['SecretString'])
+    return variables
 
-# Update the task_id for the assigned token and write back to secrets manager
-for x in v_all:
-    if x['token_id'] == v['token_id']:
-        x['task_id'] = task_id
-        break
 
-put_secret_value_response = client.put_secret_value(
-    SecretId=args.secret,
-    SecretString=json.dumps(v_all, indent=2)
-)
+def get_task_id():
+    endpoint = os.environ.get('ECS_CONTAINER_METADATA_URI_V4')
+    response = requests.get(f"{endpoint}/task")
+    task_id = response.json().get('TaskARN').split('/')[-1]
+    return task_id
+
+
+def get_available_token(all_variables):
+    v_avaliable = [x for x in all_variables if not x['task_id']]
+
+    if not v_avaliable:
+        raise Exception("No available tokens found. Please check the varaibles in secrets manager.")
+
+    variables = v_avaliable[0]
+
+    with open('/variables', 'w') as file:
+        for key, value in variables.items():
+            file.write(f'{key}={value}\n')
+
+    with open('/token', 'w') as file:
+        file.write(json.dumps({variables['token_id']: variables['token_secret']}))
+
+    return variables
+
+
+def update_variables(all_variables, task_variables, task_id):
+    for x in all_variables:
+        if x['token_id'] == task_variables['token_id']:
+            x['task_id'] = task_id
+            break
+
+
+def put_secret(secret_name, updated_variables):
+    response = CLIENT.put_secret_value(
+        SecretId=secret_name,
+        SecretString=json.dumps(updated_variables, indent=2)
+    )
+    return response
+
+
+if __name__ == "__main__":
+    main()
