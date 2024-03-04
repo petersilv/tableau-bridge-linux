@@ -72,6 +72,8 @@ def update_variables(all_variables, task_variables, task_id):
             x['task_id'] = task_id
             break
 
+    return all_variables
+
 
 def put_secret(secret_name, updated_variables):
     response = CLIENT.put_secret_value(
