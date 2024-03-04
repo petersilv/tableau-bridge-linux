@@ -21,7 +21,11 @@ resource "aws_iam_role" "task_execution" {
 data "aws_iam_policy_document" "task" {
   statement {
     actions   = [
-      "secretsmanager:*"
+      "secretsmanager:*",
+      "ssmmessages:CreateControlChannel",
+      "ssmmessages:CreateDataChannel",
+      "ssmmessages:OpenControlChannel",
+      "ssmmessages:OpenDataChannel"
     ]
     resources = ["*"]
   }
@@ -108,8 +112,8 @@ resource "aws_ecs_task_definition" "main" {
         "/bin/sh",
         "-c",
         join( " && ", [
-          "/get-variables ${aws_secretsmanager_secret.variables.id}",
-          "source /variables.sh",
+          "python3 /get-variables.py --secret ${aws_secretsmanager_secret.variables.id}",
+          "source /variables",
           join( " ", [
             "/opt/tableau/tableau_bridge/bin/TabBridgeClientWorker",
             "-e",
@@ -126,18 +130,18 @@ resource "aws_ecs_task_definition" "main" {
 }
 
 resource "aws_ecs_service" "main" {
-  name            = var.application_name
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.main.arn
-  launch_type     = "FARGATE"
+  name                   = var.application_name
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.main.arn
+  launch_type            = "FARGATE"
+  enable_execute_command = true
+  desired_count          = 1
 
   network_configuration {
     subnets = [var.subnet_id]
     security_groups = [aws_security_group.main.id]
     assign_public_ip = true
   }
-
-  desired_count = 1
 
   depends_on = [
     aws_ecs_task_definition.main
