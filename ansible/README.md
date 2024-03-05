@@ -1,6 +1,6 @@
-# Tableau Bridge for Linux - Instance
+# Tableau Bridge for Linux - Ansible
 
-This part of the repository provides the resources required to deploy Tableau Bridge on a Linux machine using Ansible.
+Deploy Tableau Bridge on a Linux machine using Ansible.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ Before proceeding with the deployment, ensure that you meet the following requir
 2. **Remote Machine Access**:
     - You have SSH access to the target machine where the Tableau Bridge will be deployed.
 
-3. **GitHub**:
+3. **Git**:
     - You have `git` installed to clone repositories.
 
 4. **Tableau Cloud**:
@@ -31,13 +31,12 @@ Before proceeding with the deployment, ensure that you meet the following requir
     ```
 
 2. **Configuration**:
-    - Update the `token` file with the required access token from your Tableau Cloud site.
-    - Update the `variables` file to reflect the appropriate values corresponding to your Tableau Cloud setup.
+    - Update the `vars.yaml` file to reflect the appropriate values corresponding to your Tableau Cloud setup.
     - Update the `inventory.yaml` file with the details for the target machine where the Tableau Bridge will be deployed.
 
-3. **Optional Additional Drivers**
+3. **Optional Additional Drivers**:
 
-    This repository has been configured to install only the Postgres driver to the Bridge container. If you need additional drivers then update the ansible playbook and Dockerfile accordingly.
+    This repository has been configured to install only the Postgres driver to the Bridge container. If you need additional drivers then update the Ansible playbook and Dockerfile accordingly.
 
 4. **Deploy with Ansible**:
 

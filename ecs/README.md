@@ -1,6 +1,6 @@
-# Tableau Bridge for AWS ECS - Instance
+# Tableau Bridge for AWS ECS
 
-This part of the repository provides the resources required to deploy Tableau Bridge on an AWS ECS instance using Terraform.
+Deploy Tableau Bridge on an AWS ECS instance using Terraform.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ Before proceeding with the deployment, ensure that you meet the following requir
 3. **Docker**:
     - Docker is installed on your local machine.
 
-4. **GitHub**:
+4. **Git**:
     - You have git installed to clone repositories.
 
 5. **Tableau Cloud**:
@@ -68,4 +68,4 @@ Before proceeding with the deployment, ensure that you meet the following requir
     ./put_secret_values.shsh
     ```
 
-Once the above steps have been completed, after a few minutes a task should have provisioned successfully and a Tableau Bridge client will be deployed in the target AWS ECS service.
+Once the above steps have been completed, after a few minutes a task should have provisioned successfully and a Tableau Bridge client will be deployed in the target AWS ECS service. You my need to kill the task that was launched at creation so ECS can spawn a new one with the correct image and secrets.
